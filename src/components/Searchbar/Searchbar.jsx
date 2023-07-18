@@ -1,5 +1,6 @@
 import { toast } from 'react-toastify';
 import { Component } from 'react';
+import { HiMagnifyingGlass } from 'react-icons/hi2';
 import css from './Searchbar.module.css';
 
 export class Searchbar extends Component {
@@ -31,8 +32,8 @@ export class Searchbar extends Component {
     return (
       <header className={css.searchbar}>
         <form className={css.form} onSubmit={this.handleSubmit}>
-          <button type="submit" className="button">
-            <span className={css.buttonLabel}>Search</span>
+          <button type="submit" className={css.buttonSearch}>
+            <span className={css.buttonLabel}><HiMagnifyingGlass size="24" className={css.svg} /></span>
           </button>
 
           <input
