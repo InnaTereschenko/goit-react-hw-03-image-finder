@@ -9,9 +9,10 @@ export class Searchbar extends Component {
   };
 
   handleChangeQ = evt => {
-    this.setState({ query: evt.currentTarget.value});
-    console.log( this.state);
+    this.setState({ query: evt.target.value.toLowerCase()});
+    
   };
+
 
   handleSubmit = evt => {
     evt.preventDefault();
@@ -21,7 +22,7 @@ export class Searchbar extends Component {
       toast('Please enter your search query')
       return;
     }
-
+  
     this.props.onSubmit(this.state.query);
     this.setState({ query: '' });
   };

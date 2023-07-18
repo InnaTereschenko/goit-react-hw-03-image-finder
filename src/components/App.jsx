@@ -1,28 +1,24 @@
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import * as fetchImages from '../services/pixabay-api';
+import * as pixabayapi from '../services/pixabayapi';
 import React, { Component } from 'react';
 import { Searchbar } from './Searchbar/Searchbar.jsx';
 import { ImageGallery } from './ImageGallery/ImageGallery.jsx';
-import { Loader } from './Loader/Loader.jsx';
-import { Button } from './Button/Button.jsx';
-
+import Loader from './Loader/Loader.jsx';
+import Button from './Button/Button.jsx';
 
 export class App extends Component {
   state = {
     query: '',
     images: [],
     page: 1,
-    isLoading: false,
     totalHits: 0,
-    
+    isLoadMoreBtnVisible: false,
+    isLoading: false,
+  
   };
 
-  showModal = () => {
-    this.setState(({ showModal }) => ({ showModal: !this.showModal })
-    )
-  };
-
+  
   async componentDidUpdate(prevProps, prevState) {
     const { query, page } = this.state;
     // перевірка на пусту строку та введення нового запиту, а також що поточна сторінка змінилась
@@ -33,12 +29,22 @@ export class App extends Component {
       try {
         this.setState({ isLoading: true }); //*поки пішов запит показується лоадер
 
-        const { totalHits, hits } = await fetchImages({ query, page });
+        const images = await pixabayapi.fetchImages({ query, page });
+        if (images.hits <= 0) {
+          toast.warning('Sorry. There are no images ... 😭');
+          return;
+        }
+        if (page === 1) {
+          toast.info(`Found ${images.total} images`);
+        }
 
         // розпиляємо об'єкт з отриманими раніше результатами + об'єкт з новими результатами
         this.setState(prevState => ({
-          images: [...prevState.images, ...this.getNormalizedImages(hits)],
-          isLoadMoreBtnVisible: page < Math.ceil(totalHits / 12),
+          images: [
+            ...prevState.images,
+            ...this.getNormalizedImages(images.hits),
+          ],
+          isLoadMoreBtnVisible: page < Math.ceil(images.totalHits / 12),
         }));
       } catch (err) {
         toast.error('Sorry, something goes wrong');
@@ -58,7 +64,11 @@ export class App extends Component {
   }
 
   handleFormSubmit = query => {
-    this.setState({ query });
+    this.setState({ query, images: [], page: 1 });
+  };
+
+  handleClickLoadMore = () => {
+    return this.setState(prevState => ({ page: prevState.page + 1 }));
   };
 
   render() {
@@ -71,12 +81,21 @@ export class App extends Component {
           paddingBottom: '24px',
         }}
       >
-        {this.state.isLoading && <Loader />}
         
+
         <Searchbar onSubmit={this.handleFormSubmit} />
-        <ImageGallery images={this.state.images}></ImageGallery>
-        <Button />
-        <ToastContainer autoClose={1000} position="top-center" theme="light" />
+
+        {this.state.images.length > 0 && (
+          <ImageGallery images={this.state.images}></ImageGallery>
+        )}
+
+        {this.state.isLoading && <Loader />}
+
+        {this.state.isLoadMoreBtnVisible && !this.state.isLoading && (
+          <Button onClick={this.handleClickLoadMore} />
+        )}
+
+        <ToastContainer autoClose={1500} position="top-center" theme="light" />
       </div>
     );
   }
